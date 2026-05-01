@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Management – Easy Explainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --white:   #ffffff;
+  --bg:      #f0f4ff;
+  --card:    #ffffff;
+  --navy:    #1a2b5e;
+  --blue:    #2563eb;
+  --sky:     #38bdf8;
+  --green:   #16a34a;
+  --red:     #dc2626;
+  --yellow:  #f59e0b;
+  --purple:  #7c3aed;
+  --orange:  #ea580c;
+  --gray:    #64748b;
+  --lgray:   #e2e8f0;
+  --radius:  14px;
+  --shadow:  0 4px 24px rgba(37,99,235,.10);
+}
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: #1e293b;
+  min-height: 100vh;
+}
+/* ── Top nav ── */
+.topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,.25);
+}
+.topbar-title { font-size: 1.15rem; font-weight: 800; letter-spacing: .5px; }
+.topbar-title span { color: var(--sky); }
+.nav-pills { display: flex; gap: 6px; }
+.np {
+  padding: 6px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700;
+  cursor: pointer; border: 2px solid transparent; color: #94a3b8;
+  transition: all .2s; background: none;
+}
+.np:hover { color: #fff; border-color: rgba(255,255,255,.2); }
+.np.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* ── Page panes ── */
+.pane { display: none; }
+.pane.active { display: block; }
+
+/* ── Hero banner ── */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e40af 100%);
+  color: #fff; padding: 56px 32px 48px;
+  text-align: center;
+}
+.hero h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.2; margin-bottom: 14px; }
+.hero h1 span { color: var(--sky); }
+.hero p { font-size: 1.15rem; color: #bfdbfe; max-width: 640px; margin: 0 auto 28px; }
+.hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.hbadge {
+  padding: 6px 16px; border-radius: 20px; font-size: .85rem; font-weight: 700;
+  background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25);
+}
+
+/* ── Content wrapper ── */
+.content { max-width: 980px; margin: 0 auto; padding: 36px 24px 60px; }
+
+/* ── Section cards ── */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 28px 32px; margin-bottom: 28px;
+  border: 1.5px solid var(--lgray);
+}
+.card-title {
+  font-size: 1.3rem; font-weight: 900; color: var(--navy);
+  margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+}
+.card-sub { font-size: .95rem; color: var(--gray); margin-bottom: 22px; }
+.icon-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.ic-blue   { background: #dbeafe; }
+.ic-green  { background: #dcfce7; }
+.ic-yellow { background: #fef3c7; }
+.ic-purple { background: #ede9fe; }
+.ic-red    { background: #fee2e2; }
+.ic-orange { background: #ffedd5; }
+
+/* ── Step boxes ── */
+.steps { display: flex; flex-direction: column; gap: 14px; }
+.step {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: #f8faff; border-radius: 10px; padding: 14px 18px;
+  border-left: 4px solid var(--blue);
+}
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--blue);
+  color: #fff; font-weight: 900; font-size: .95rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.step-text { font-size: .95rem; line-height: 1.6; padding-top: 4px; }
+.step-text strong { color: var(--navy); }
+.step.green { border-left-color: var(--green); }
+.step.green .step-num { background: var(--green); }
+.step.yellow { border-left-color: var(--yellow); }
+.step.yellow .step-num { background: var(--yellow); color: #1e293b; }
+.step.red { border-left-color: var(--red); }
+.step.red .step-num { background: var(--red); }
+.step.purple { border-left-color: var(--purple); }
+.step.purple .step-num { background: var(--purple); }
+
+/* ── Analogy boxes ── */
+.analogy {
+  background: #fef9ec; border: 2px dashed var(--yellow);
+  border-radius: 10px; padding: 16px 20px; margin: 18px 0;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.analogy-emoji { font-size: 1.8rem; flex-shrink: 0; }
+.analogy-text { font-size: .95rem; line-height: 1.6; }
+.analogy-text strong { color: var(--orange); }
+
+/* ── Key points ── */
+.key-points { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.kp {
+  display: flex; gap: 10px; align-items: center;
+  background: #f8faff; border-radius: 9px; padding: 12px 14px;
+}
+.kp-icon { font-size: 1.3rem; }
+.kp-text { font-size: .9rem; font-weight: 600; color: var(--navy); }
+
+/* ── BIG interactive demo ── */
+.demo-area {
+  background: #f0f6ff; border-radius: 12px;
+  padding: 24px; margin-top: 20px; border: 2px solid #bfdbfe;
+}
+.demo-title { font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.demo-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.demo-label { font-size: .9rem; font-weight: 700; color: var(--gray); }
+input[type=number], input[type=text] {
+  border: 2px solid var(--lgray); border-radius: 8px;
+  padding: 8px 12px; font-family: 'Nunito', sans-serif;
+  font-size: .95rem; font-weight: 600; width: 120px;
+  outline: none; background: #fff;
+  transition: border-color .2s;
+}
+input:focus { border-color: var(--blue); }
+.btn {
+  padding: 9px 22px; border-radius: 9px; font-family: 'Nunito', sans-serif;
+  font-size: .9rem; font-weight: 800; cursor: pointer; border: none;
+  transition: all .2s; letter-spacing: .3px;
+}
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-blue:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { background: #15803d; transform: translateY(-1px); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { background: #b91c1c; }
+.btn-gray { background: var(--lgray); color: var(--navy); }
+.btn-gray:hover { background: #cbd5e1; }
+.btn-purple { background: var(--purple); color: #fff; }
+.btn-purple:hover { background: #6d28d9; }
+
+/* ── Result banner ── */
+.result-banner {
+  border-radius: 10px; padding: 14px 20px; margin: 14px 0;
+  font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
+  animation: slideIn .3s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.rb-hit    { background: #dcfce7; color: var(--green); border: 2px solid #86efac; }
+.rb-miss   { background: #dbeafe; color: #1d4ed8; border: 2px solid #93c5fd; }
+.rb-fault  { background: #fef3c7; color: #b45309; border: 2px solid #fcd34d; }
+.rb-err    { background: #fee2e2; color: var(--red); border: 2px solid #fca5a5; }
+.rb-seg    { background: #ede9fe; color: var(--purple); border: 2px solid #c4b5fd; }
+
+/* ── Memory frame grid ── */
+.frame-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 10px; }
+.frame-box {
+  border-radius: 8px; padding: 10px 4px; text-align: center;
+  border: 2px solid var(--lgray); background: #f8faff;
+  transition: all .4s; font-size: .72rem; font-weight: 700;
+}
+.frame-box.used { background: #dcfce7; border-color: #4ade80; color: var(--green); }
+.frame-box.just-in { animation: frameIn .5s ease; border-color: var(--yellow); background: #fef9c3; }
+@keyframes frameIn { 0% { transform:scale(1.15); background:#fef3c7; } 100% { transform:scale(1); } }
+.frame-num { font-size: .65rem; color: var(--gray); margin-bottom: 2px; }
+.frame-label { font-size: .78rem; font-weight: 800; }
+
+/* ── TLB boxes ── */
+.tlb-row { display: flex; gap: 8px; margin-top: 8px; }
+.tlb-box {
+  flex: 1; border-radius: 8px; padding: 10px 8px; text-align: center;
+  border: 2px solid var(--lgray); background: #f8faff;
+  font-size: .78rem; font-weight: 700; transition: all .3s;
+}
+.tlb-box.active { background: #fef9c3; border-color: var(--yellow); color: #92400e; }
+.tlb-label { font-size: .6rem; color: var(--gray); margin-bottom: 3px; }
+
+/* ── Address translation visual ── */
+.trans-visual {
+  display: flex; align-items: center; gap: 0; overflow-x: auto;
+  margin: 16px 0; padding: 4px;
+}
+.tv-box {
+  border-radius: 9px; padding: 12px 16px; text-align: center;
+  min-width: 100px; flex-shrink: 0;
+  border: 2px solid var(--lgray); background: #f8faff;
+  transition: all .4s;
+}
+.tv-box.active { border-color: var(--blue); background: #dbeafe; }
+.tv-box.result { border-color: var(--green); background: #dcfce7; }
+.tv-box.empty  { opacity: .4; }
+.tv-top { font-size: .62rem; font-weight: 700; color: var(--gray); letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
+.tv-val { font-size: 1.3rem; font-weight: 900; color: var(--navy); }
+.tv-box.active .tv-val { color: var(--blue); }
+.tv-box.result .tv-val { color: var(--green); }
+.tv-arrow { font-size: 1.5rem; color: #94a3b8; padding: 0 6px; flex-shrink: 0; }
+
+/* ── Log panel ── */
+.log-panel {
+  background: #1e293b; border-radius: 10px; padding: 14px 16px;
+  max-height: 200px; overflow-y: auto; margin-top: 16px;
+  font-family: 'Fira Code', monospace; font-size: .82rem;
+}
+.log-panel::-webkit-scrollbar { width: 4px; }
+.log-panel::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+.log-line { margin-bottom: 4px; display: flex; gap: 10px; animation: slideIn .3s ease; }
+.log-time { color: #64748b; flex-shrink: 0; }
+.log-hit   { color: #4ade80; }
+.log-miss  { color: #60a5fa; }
+.log-fault { color: #fbbf24; }
+.log-err   { color: #f87171; }
+.log-info  { color: #94a3b8; }
+
+/* ── Stats row ── */
+.stats-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.stat-pill {
+  padding: 8px 18px; border-radius: 20px; font-size: .88rem;
+  font-weight: 800; display: flex; gap: 7px; align-items: center;
+}
+.sp-blue   { background: #dbeafe; color: #1d4ed8; }
+.sp-green  { background: #dcfce7; color: var(--green); }
+.sp-red    { background: #fee2e2; color: var(--red); }
+.sp-yellow { background: #fef3c7; color: #b45309; }
+.sp-purple { background: #ede9fe; color: var(--purple); }
+
+/* ── Seg bars ── */
+.seg-bar-wrap { margin-bottom: 12px; }
+.seg-bar-label { display: flex; justify-content: space-between; font-size: .85rem; font-weight: 700; margin-bottom: 4px; }
+.seg-bar-track { height: 28px; background: var(--lgray); border-radius: 6px; overflow: hidden; position: relative; }
+.seg-bar-fill  { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: .78rem; font-weight: 800; color: #fff; transition: width .5s ease; }
+
+/* ── Replacement viz ── */
+.ref-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 14px; }
+.ref-chip {
+  width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: .95rem; font-weight: 800;
+  border: 2px solid var(--lgray); background: #f8faff; transition: all .3s;
+}
+.ref-chip.hit   { background: #dcfce7; border-color: #4ade80; color: var(--green); }
+.ref-chip.fault { background: #fef3c7; border-color: #fbbf24; color: #b45309; }
+.ref-chip.cur   { background: var(--blue); border-color: var(--blue); color: #fff; transform: scale(1.15); }
+
+.algo-compare { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+.ac-box {
+  border-radius: 10px; padding: 16px; text-align: center;
+  border: 2px solid var(--lgray); background: #f8faff;
+}
+.ac-name { font-size: .8rem; font-weight: 700; color: var(--gray); margin-bottom: 4px; }
+.ac-val  { font-size: 2rem; font-weight: 900; }
+.ac-sub  { font-size: .75rem; color: var(--gray); margin-top: 4px; }
+
+/* ── Concept diagram ── */
+.concept-diagram {
+  border-radius: 10px; background: #f8faff; border: 2px solid #bfdbfe;
+  padding: 20px; margin: 16px 0;
+}
+.cd-row { display: flex; align-items: center; gap: 0; margin-bottom: 10px; }
+.cd-box {
+  border-radius: 8px; padding: 10px 14px; text-align: center;
+  font-size: .85rem; font-weight: 700; flex-shrink: 0;
+}
+.cd-arrow { font-size: 1.4rem; color: #94a3b8; padding: 0 8px; }
+
+/* ── Virt map ── */
+.virt-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 5px; margin: 10px 0; }
+.vg-cell {
+  height: 40px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; border: 2px solid var(--lgray);
+  cursor: pointer; transition: all .25s; background: #f8faff;
+}
+.vg-cell.present { background: #dcfce7; border-color: #4ade80; color: var(--green); }
+.vg-cell.disk    { background: #ffedd5; border-color: #fdba74; color: var(--orange); }
+.vg-cell.empty   { color: #cbd5e1; }
+.vg-cell:hover   { transform: scale(1.08); }
+
+/* ── Info tooltip ── */
+.tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; background: #dbeafe;
+  color: var(--blue); font-size: .7rem; font-weight: 900; cursor: help;
+  margin-left: 6px;
+}
+
+/* ── Legend ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; }
+.leg-dot { width: 14px; height: 14px; border-radius: 4px; }
+
+/* ── What Is section ── */
+.concept-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 18px; }
+.cc-card {
+  border-radius: 12px; padding: 20px 18px;
+  border: 2px solid;
+}
+.cc-card.blue   { background: #eff6ff; border-color: #93c5fd; }
+.cc-card.green  { background: #f0fdf4; border-color: #86efac; }
+.cc-card.purple { background: #faf5ff; border-color: #c4b5fd; }
+.cc-card h3 { font-size: 1rem; font-weight: 900; margin-bottom: 8px; }
+.cc-card p  { font-size: .85rem; line-height: 1.6; color: #475569; }
+.cc-card .cc-icon { font-size: 2rem; margin-bottom: 8px; }
+
+/* ── Responsive ── */
+@media(max-width:680px){
+  .concept-cards, .algo-compare, .key-points { grid-template-columns: 1fr; }
+  .frame-grid { grid-template-columns: repeat(4,1fr); }
+  .hero h1 { font-size: 1.8rem; }
+  .trans-visual { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="topbar-title">💾 <span>Memory</span>Viz — OS Demo Tool</div>
+  <div class="nav-pills">
+    <button class="np active" onclick="show('home')">🏠 Home</button>
+    <button class="np" onclick="show('paging')">📄 Paging</button>
+    <button class="np" onclick="show('segmentation')">🗂️ Segmentation</button>
+    <button class="np" onclick="show('virtual')">💿 Virtual Memory</button>
+    <button class="np" onclick="show('replacement')">🔄 Page Replacement</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOME PAGE
+══════════════════════════════════════════ -->
+<div class="pane active" id="pane-home">
+  <div class="hero">
+    <h1>What is <span>Memory Management</span>?</h1>
+    <p>An Operating System must carefully share RAM between many programs. This tool shows you exactly how it does that — step by step, with live examples!</p>
+    <div class="hero-badges">
+      <span class="hbadge">📄 Paging</span>
+      <span class="hbadge">🗂️ Segmentation</span>
+      <span class="hbadge">💿 Virtual Memory</span>
+      <span class="hbadge">🔄 Page Replacement</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">🤔</div>Why does the OS manage memory?</div>
+      <div class="card-sub">Simple explanation first!</div>
+      <div class="analogy">
+        <div class="analogy-emoji">🏠</div>
+        <div class="analogy-text">
+          Imagine your RAM is a <strong>flat with 16 rooms</strong>. Many apps (Chrome, VS Code, games) all need rooms at the same time. The OS is like a <strong>building manager</strong> — it decides which app gets which room, moves things around when needed, and makes sure apps don't enter each other's rooms.
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Every running program needs space in RAM (memory) to store its data and code.</div>
+        </div>
+        <div class="step green">
+          <div class="step-num">2</div>
+          <div class="step-text">RAM is limited — we can't give every program unlimited space, so the OS must <strong>share it fairly</strong>.</div>
+        </div>
+        <div class="step yellow">
+          <div class="step-num">3</div>
+          <div class="step-text">The OS uses clever techniques — <strong>Paging, Segmentation, Virtual Memory</strong> — to do this efficiently.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="concept-cards">
+      <div class="cc-card blue" onclick="show('paging')" style="cursor:pointer">
+        <div class="cc-icon">📄</div>
+        <h3 style="color:#1d4ed8">Paging</h3>
+        <p>Split memory into equal fixed-size "pages". Each program's pages can be scattered anywhere in RAM. A page table keeps track of where everything is.</p>
+        <div style="margin-top:12px;font-size:.8rem;font-weight:800;color:#1d4ed8">Click to try it →</div>
+      </div>
+      <div class="cc-card green" onclick="show('segmentation')" style="cursor:pointer">
+        <div class="cc-icon">🗂️</div>
+        <h3 style="color:#16a34a">Segmentation</h3>
+        <p>Split a program into logical parts — code segment, data segment, stack. Each part can be different sizes and placed anywhere in RAM.</p>
+        <div style="margin-top:12px;font-size:.8rem;font-weight:800;color:#16a34a">Click to try it →</div>
+      </div>
+      <div class="cc-card purple" onclick="show('virtual')" style="cursor:pointer">
+        <div class="cc-icon">💿</div>
+        <h3 style="color:#7c3aed">Virtual Memory</h3>
+        <p>Give programs the illusion of having more RAM than physically exists! Unused pages are moved to disk and loaded back on demand.</p>
+        <div style="margin-top:12px;font-size:.8rem;font-weight:800;color:#7c3aed">Click to try it →</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px">
+      <div class="card-title"><div class="icon-circle ic-blue">📐</div>Key Numbers in This Simulation</div>
+      <div class="card-sub">These are the settings we use throughout all the demos</div>
+      <div class="key-points">
+        <div class="kp"><div class="kp-icon">📦</div><div class="kp-text">Page Size = <strong>4 KB</strong> (4096 bytes)</div></div>
+        <div class="kp"><div class="kp-icon">🏢</div><div class="kp-text">Physical Frames = <strong>16</strong> (total RAM)</div></div>
+        <div class="kp"><div class="kp-icon">📋</div><div class="kp-text">Virtual Pages = <strong>32</strong> (per process)</div></div>
+        <div class="kp"><div class="kp-icon">⚡</div><div class="kp-text">TLB Size = <strong>4 entries</strong> (fast cache)</div></div>
+        <div class="kp"><div class="kp-icon">🗂️</div><div class="kp-text">Max Segments = <strong>8</strong></div></div>
+        <div class="kp"><div class="kp-icon">💻</div><div class="kp-text">Languages: <strong>C, Python, Java, ASM</strong></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGING PAGE
+══════════════════════════════════════════ -->
+<div class="pane" id="pane-paging">
+  <div class="hero" style="padding:36px 32px 32px">
+    <h1>📄 <span>Paging</span> — How it Works</h1>
+    <p>Memory is divided into fixed-size chunks called <strong>pages</strong>. The OS keeps a table to track where each page lives in RAM.</p>
+  </div>
+
+  <div class="content">
+    <!-- Concept explanation -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">💡</div>Simple Analogy First</div>
+      <div class="analogy">
+        <div class="analogy-emoji">📚</div>
+        <div class="analogy-text">
+          Think of a <strong>library with numbered shelves</strong>. Your book chapters (pages) can be on ANY shelf — shelf 3, shelf 10, shelf 15. The library keeps a <strong>catalogue (page table)</strong> that says "Chapter 1 is on shelf 3, Chapter 2 is on shelf 10..." When you want Chapter 2, you check the catalogue → go to shelf 10. <strong>That's paging!</strong>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Your program has a <strong>Virtual Address</strong> — e.g., address 8200</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">OS splits it: <strong>Page Number</strong> = 8200 ÷ 4096 = <strong>2</strong> &nbsp;|&nbsp; <strong>Offset</strong> = 8200 mod 4096 = <strong>8</strong></div>
+        </div>
+        <div class="step green">
+          <div class="step-num">3</div>
+          <div class="step-text">OS checks the <strong>TLB</strong> (super fast cache). If page 2 is there → <span style="color:var(--green);font-weight:900">TLB HIT! ⚡</span> Done instantly.</div>
+        </div>
+        <div class="step yellow">
+          <div class="step-num">4</div>
+          <div class="step-text">If not in TLB → check <strong>Page Table</strong>. If found → <span style="color:#b45309;font-weight:900">TLB MISS</span> but OK, just slightly slower.</div>
+        </div>
+        <div class="step red">
+          <div class="step-num">5</div>
+          <div class="step-text">If page not in RAM at all → <span style="color:var(--red);font-weight:900">PAGE FAULT! 🚨</span> OS loads it from disk. Slow, but OK.</div>
+        </div>
+        <div class="step purple">
+          <div class="step-num">6</div>
+          <div class="step-text"><strong>Physical Address</strong> = Frame Number × 4096 + Offset. Done! Program gets its data.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address translation diagram -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-blue">🔢</div>Address Translation — Live Demo</div>
+      <div class="card-sub">Enter a virtual address and watch how the OS translates it to a physical address</div>
+
+      <div class="demo-controls">
+        <span class="demo-label">Process:</span>
+        <input type="number" id="p-pid" value="1" min="1" max="4" style="width:70px">
+        <span class="demo-label">Virtual Address:</span>
+        <input type="number" id="p-va" value="8200" min="0" max="131071">
+        <button class="btn btn-blue" onclick="doPage()">🔍 Translate</button>
+        <button class="btn btn-gray" onclick="resetPaging()">↺ Reset</button>
+      </div>
+
+      <!-- Translation visual -->
+      <div class="trans-visual" id="p-trans">
+        <div class="tv-box empty"><div class="tv-top">Virtual Addr</div><div class="tv-val" id="tv-va">?</div></div>
+        <div class="tv-arrow">→</div>
+        <div class="tv-box empty"><div class="tv-top">Page #</div><div class="tv-val" id="tv-pn">?</div></div>
+        <div class="tv-arrow">+</div>
+        <div class="tv-box empty"><div class="tv-top">Offset</div><div class="tv-val" id="tv-off">?</div></div>
+        <div class="tv-arrow">→</div>
+        <div class="tv-box empty"><div class="tv-top">Frame #</div><div class="tv-val" id="tv-fn">?</div></div>
+        <div class="tv-arrow">→</div>
+        <div class="tv-box empty"><div class="tv-top">Physical Addr</div><div class="tv-val" id="tv-pa">?</div></div>
+      </div>
+
+      <!-- Result banner -->
+      <div id="p-result"></div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-pill sp-red">🚨 Page Faults: <span id="ps-pf">0</span></div>
+        <div class="stat-pill sp-green">⚡ TLB Hits: <span id="ps-th">0</span></div>
+        <div class="stat-pill sp-blue">📋 TLB Misses: <span id="ps-tm">0</span></div>
+        <div class="stat-pill sp-yellow">📊 Total: <span id="ps-ta">0</span></div>
+        <div class="stat-pill sp-purple">⏱️ EAT: <span id="ps-eat">10</span> ns</div>
+      </div>
+    </div>
+
+    <!-- TLB -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">⚡</div>TLB — Translation Lookaside Buffer</div>
+      <div class="card-sub">4 slots that remember recent page-to-frame mappings for super fast lookup</div>
+      <div class="analogy">
+        <div class="analogy-emoji">🧠</div>
+        <div class="analogy-text">TLB is like your <strong>short-term memory</strong>. You've looked up something recently, so you remember it without checking the book again. Only 4 slots → when full, the oldest is replaced.</div>
+      </div>
+      <div class="tlb-row" id="tlb-display">
+        <div class="tlb-box"><div class="tlb-label">SLOT 0</div><em style="color:#cbd5e1">empty</em></div>
+        <div class="tlb-box"><div class="tlb-label">SLOT 1</div><em style="color:#cbd5e1">empty</em></div>
+        <div class="tlb-box"><div class="tlb-label">SLOT 2</div><em style="color:#cbd5e1">empty</em></div>
+        <div class="tlb-box"><div class="tlb-label">SLOT 3</div><em style="color:#cbd5e1">empty</em></div>
+      </div>
+    </div>
+
+    <!-- Physical frames -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-green">🏢</div>Physical Memory — 16 Frames</div>
+      <div class="card-sub">Each box is one frame (4 KB). Green = occupied, White = free. Click Translate to fill them up!</div>
+      <div class="frame-grid" id="p-frames"></div>
+      <div class="legend" style="margin-top:14px">
+        <div class="leg-item"><div class="leg-dot" style="background:#dcfce7;border:2px solid #4ade80"></div>Occupied (page loaded)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f8faff;border:2px solid #e2e8f0"></div>Free</div>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-blue">📝</div>Event Log</div>
+      <div class="log-panel" id="p-log">
+        <div class="log-line"><span class="log-time">00:00</span><span class="log-info">Paging simulator ready. 16 frames available.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SEGMENTATION PAGE
+══════════════════════════════════════════ -->
+<div class="pane" id="pane-segmentation">
+  <div class="hero" style="padding:36px 32px 32px;background:linear-gradient(135deg,#14532d,#16a34a)">
+    <h1>🗂️ <span>Segmentation</span></h1>
+    <p>Programs are split into <strong>logical parts</strong> (segments) of different sizes — code, data, stack. Each segment is stored together in RAM.</p>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">💡</div>Simple Analogy</div>
+      <div class="analogy">
+        <div class="analogy-emoji">🏡</div>
+        <div class="analogy-text">
+          Think of a <strong>house with different rooms</strong>: kitchen, bedroom, living room. Each room is a different size. <strong>Code segment</strong> = bedroom (where you store your work), <strong>Data segment</strong> = kitchen (where data lives), <strong>Stack</strong> = living room (temporary things). The OS knows the <strong>address and size</strong> of each room.
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Address = <strong>(Segment ID, Offset)</strong> — e.g., Segment 0, Offset 500</div>
+        </div>
+        <div class="step green">
+          <div class="step-num">2</div>
+          <div class="step-text">OS looks up <strong>Segment Table</strong> → gets Base address and Limit (size)</div>
+        </div>
+        <div class="step yellow">
+          <div class="step-num">3</div>
+          <div class="step-text">Check: Is <strong>Offset &lt; Limit</strong>? If YES → Physical Address = Base + Offset ✅</div>
+        </div>
+        <div class="step red">
+          <div class="step-num">4</div>
+          <div class="step-text">If Offset &gt;= Limit → <strong>SEGMENTATION FAULT!</strong> 🚨 Access denied — you went outside the segment boundary.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-green">🎮</div>Create &amp; Access Segments</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:.9rem;font-weight:800;color:var(--navy);margin-bottom:12px">Step 1: Create a Segment</div>
+          <div class="demo-controls" style="flex-direction:column;align-items:flex-start;gap:8px">
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="demo-label" style="width:100px">Segment ID:</span>
+              <input type="number" id="s-id" value="0" min="0" max="7" style="width:70px">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="demo-label" style="width:100px">Size (bytes):</span>
+              <input type="number" id="s-size" value="4000" min="100" max="8192">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="demo-label" style="width:100px">Process ID:</span>
+              <input type="number" id="s-pid" value="1" min="1" max="4" style="width:70px">
+            </div>
+            <button class="btn btn-green" onclick="createSeg()">✅ Create Segment</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.9rem;font-weight:800;color:var(--navy);margin-bottom:12px">Step 2: Access the Segment</div>
+          <div class="demo-controls" style="flex-direction:column;align-items:flex-start;gap:8px">
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="demo-label" style="width:100px">Segment ID:</span>
+              <input type="number" id="sa-id" value="0" min="0" max="7" style="width:70px">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <span class="demo-label" style="width:100px">Offset:</span>
+              <input type="number" id="sa-off" value="500" min="0">
+            </div>
+            <button class="btn btn-blue" onclick="accessSeg()">🔍 Access</button>
+            <button class="btn btn-gray" onclick="resetSeg()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="s-result" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Segment table -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-green">📊</div>Segment Table &amp; Memory Map</div>
+      <div id="seg-bars"><div style="color:var(--gray);font-size:.9rem">Create some segments to see the memory map →</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-blue">📝</div>Event Log</div>
+      <div class="log-panel" id="s-log">
+        <div class="log-line"><span class="log-time">00:00</span><span class="log-info">Segmentation simulator ready.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VIRTUAL MEMORY PAGE
+══════════════════════════════════════════ -->
+<div class="pane" id="pane-virtual">
+  <div class="hero" style="padding:36px 32px 32px;background:linear-gradient(135deg,#4c1d95,#7c3aed)">
+    <h1>💿 <span>Virtual Memory</span></h1>
+    <p>Give programs the <strong>illusion of unlimited RAM!</strong> Pages not in use are saved to disk and loaded back when needed.</p>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">💡</div>Simple Analogy</div>
+      <div class="analogy">
+        <div class="analogy-emoji">📦</div>
+        <div class="analogy-text">
+          Your desk (RAM) is small — only 16 spots. But you have <strong>32 things to work on</strong>. Solution: keep the most-used things on your desk, and store the rest in a <strong>drawer (disk/swap space)</strong>. When you need something from the drawer, swap it with something on the desk. <strong>That's virtual memory!</strong>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Program thinks it has <strong>32 pages of memory</strong>, even though only 16 physical frames exist.</div>
+        </div>
+        <div class="step green">
+          <div class="step-num">2</div>
+          <div class="step-text">Pages currently being used are <strong>In Memory</strong> (green). Others wait on disk (orange).</div>
+        </div>
+        <div class="step yellow">
+          <div class="step-num">3</div>
+          <div class="step-text">When a program accesses a page on disk → <strong>Page Fault</strong> → OS loads it into a free frame.</div>
+        </div>
+        <div class="step red">
+          <div class="step-num">4</div>
+          <div class="step-text">If RAM is full → OS must <strong>evict</strong> a page (send it to disk) to make space. Choose wisely!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-purple">🎮</div>Virtual Memory Map — Click pages to load/evict</div>
+      <div class="card-sub">32 virtual pages shown below. <span style="color:var(--green);font-weight:700">Green = in RAM</span>, <span style="color:var(--orange);font-weight:700">Orange = on disk</span>, White = never used. Click any page!</div>
+
+      <div class="virt-grid" id="virt-grid"></div>
+
+      <div class="legend" style="margin-top:10px">
+        <div class="leg-item"><div class="leg-dot" style="background:#dcfce7;border:2px solid #4ade80"></div>In Physical RAM</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#ffedd5;border:2px solid #fdba74"></div>On Disk (swapped)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f8faff;border:2px solid #e2e8f0"></div>Not Used</div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="loadVPage(+document.getElementById('vl-pg').value)">Load Page →</button>
+        <input type="number" id="vl-pg" value="0" min="0" max="31" style="width:80px">
+        <button class="btn btn-red" onclick="evictVPage(+document.getElementById('ve-pg').value)">Evict Page →</button>
+        <input type="number" id="ve-pg" value="0" min="0" max="31" style="width:80px">
+        <button class="btn btn-gray" onclick="resetVirt()">↺ Reset</button>
+      </div>
+      <div id="v-result" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-purple">📊</div>Physical Frames Status</div>
+      <div class="frame-grid" id="v-frames"></div>
+      <div class="stats-row" style="margin-top:14px">
+        <div class="stat-pill sp-green">📗 In RAM: <span id="vs-mem">0</span>/16</div>
+        <div class="stat-pill sp-yellow">💿 On Disk: <span id="vs-disk">0</span>/32</div>
+        <div class="stat-pill sp-blue">⬜ Unused: <span id="vs-free">32</span>/32</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-blue">📝</div>Event Log</div>
+      <div class="log-panel" id="v-log">
+        <div class="log-line"><span class="log-time">00:00</span><span class="log-info">Virtual memory module ready. 32 virtual pages, 16 physical frames.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE REPLACEMENT PAGE
+══════════════════════════════════════════ -->
+<div class="pane" id="pane-replacement">
+  <div class="hero" style="padding:36px 32px 32px;background:linear-gradient(135deg,#7c2d12,#ea580c)">
+    <h1>🔄 <span>Page Replacement</span></h1>
+    <p>When RAM is full and a new page is needed, which old page do we kick out? Different algorithms give different answers!</p>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-yellow">💡</div>The Problem</div>
+      <div class="analogy">
+        <div class="analogy-emoji">🎒</div>
+        <div class="analogy-text">
+          Your school bag (RAM) fits only <strong>3 books</strong>. You need a 4th book — which one do you take out? <strong>FIFO</strong> = take out the oldest book. <strong>LRU</strong> = take out the one you haven't used in the longest time. <strong>Optimal</strong> = take out the one you won't need the longest (needs future knowledge!).
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+        <div style="background:#eff6ff;border:2px solid #93c5fd;border-radius:10px;padding:16px">
+          <div style="font-size:1.2rem;margin-bottom:6px">📅 FIFO</div>
+          <div style="font-size:.85rem;font-weight:700;color:#1d4ed8">First In, First Out</div>
+          <div style="font-size:.82rem;color:#475569;margin-top:6px;line-height:1.6">Remove the page that has been in RAM the <strong>longest</strong>. Like a queue — first in, first out. Simple but not always smart.</div>
+        </div>
+        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:16px">
+          <div style="font-size:1.2rem;margin-bottom:6px">⏰ LRU</div>
+          <div style="font-size:.85rem;font-weight:700;color:#16a34a">Least Recently Used</div>
+          <div style="font-size:.82rem;color:#475569;margin-top:6px;line-height:1.6">Remove the page that hasn't been used for the <strong>longest time</strong>. Smarter — recent usage predicts future usage.</div>
+        </div>
+        <div style="background:#faf5ff;border:2px solid #c4b5fd;border-radius:10px;padding:16px">
+          <div style="font-size:1.2rem;margin-bottom:6px">🔮 Optimal</div>
+          <div style="font-size:.85rem;font-weight:700;color:#7c3aed">Best Possible</div>
+          <div style="font-size:.82rem;color:#475569;margin-top:6px;line-height:1.6">Remove the page that won't be needed for the <strong>longest future time</strong>. Perfect but impossible in real OS (needs future knowledge!).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-orange">🎮</div>Try It — Compare All 3 Algorithms</div>
+      <div class="demo-controls">
+        <span class="demo-label">Frames:</span>
+        <input type="number" id="r-frames" value="3" min="2" max="5" style="width:70px">
+        <span class="demo-label">Reference String:</span>
+        <input type="text" id="r-ref" value="1,2,3,4,1,2,5,1,2,3,4,5" style="width:260px">
+        <button class="btn btn-blue" onclick="runReplacement()">▶ Run</button>
+        <button class="btn btn-gray" onclick="document.getElementById('r-ref').value='7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1';runReplacement()">📝 Classic Example</button>
+      </div>
+
+      <div class="ref-chips" id="r-chips"></div>
+
+      <div class="algo-compare" id="r-compare" style="display:none">
+        <div class="ac-box" style="border-color:#93c5fd;background:#eff6ff">
+          <div class="ac-name">📅 FIFO</div>
+          <div class="ac-val" id="rc-fifo" style="color:#1d4ed8">-</div>
+          <div class="ac-sub">page faults</div>
+        </div>
+        <div class="ac-box" style="border-color:#86efac;background:#f0fdf4">
+          <div class="ac-name">⏰ LRU</div>
+          <div class="ac-val" id="rc-lru" style="color:var(--green)">-</div>
+          <div class="ac-sub">page faults</div>
+        </div>
+        <div class="ac-box" style="border-color:#c4b5fd;background:#faf5ff">
+          <div class="ac-name">🔮 Optimal</div>
+          <div class="ac-val" id="rc-opt" style="color:var(--purple)">-</div>
+          <div class="ac-sub">page faults</div>
+        </div>
+      </div>
+
+      <div id="r-trace" style="margin-top:18px;overflow-x:auto"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="icon-circle ic-blue">📝</div>Event Log</div>
+      <div class="log-panel" id="r-log">
+        <div class="log-line"><span class="log-time">00:00</span><span class="log-info">Page replacement module ready. Enter a reference string and click Run.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── Navigation ──
+function show(tab){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.np').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pane-'+tab).classList.add('active');
+  document.querySelectorAll('.np').forEach(n=>{
+    if(n.textContent.toLowerCase().includes(tab)||
+       (tab==='home'&&n.textContent.includes('Home'))||
+       (tab==='paging'&&n.textContent.includes('Paging'))||
+       (tab==='segmentation'&&n.textContent.includes('Segmentation'))||
+       (tab==='virtual'&&n.textContent.includes('Virtual'))||
+       (tab==='replacement'&&n.textContent.includes('Replacement')))
+      n.classList.add('active');
+  });
+  if(tab==='virtual'){renderVirtGrid();renderVFrames();}
+  if(tab==='paging'){renderPFrames();renderTLB();}
+}
+
+// ── Time helper ──
+const t0=Date.now();
+function ts(){const s=Math.floor((Date.now()-t0)/1e3);return`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`}
+
+// ── Logger ──
+function appendLog(id,cls,msg){
+  const el=document.getElementById(id);
+  const d=document.createElement('div');d.className='log-line';
+  d.innerHTML=`<span class="log-time">${ts()}</span><span class="log-${cls}">${msg}</span>`;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+}
+
+// ── Result banner ──
+function showResult(id,cls,icon,msg){
+  document.getElementById(id).innerHTML=`<div class="result-banner rb-${cls}">${icon} ${msg}</div>`;
+}
+
+// ═══════════════════════════════════════════
+//  PAGING STATE
+// ═══════════════════════════════════════════
+const PS=4096,NF=16,NP=32,TS=4;
+let pState={
+  frames:Array.from({length:NF},(_,i)=>({id:i,occ:false,pid:null,pg:null})),
+  pt:Array.from({length:NP},(_,i)=>({pg:i,valid:false,fr:null,dirty:false,ref:false,lu:0})),
+  tlb:Array.from({length:TS},()=>({pg:null,fr:null,v:false})),
+  tlbN:0, clk:0,
+  stats:{pf:0,th:0,tm:0,ta:0}
+};
+
+function renderPFrames(){
+  const g=document.getElementById('p-frames');if(!g)return;
+  g.innerHTML=pState.frames.map(f=>
+    `<div class="frame-box ${f.occ?'used':''}">
+      <div class="frame-num">F${f.id}</div>
+      <div class="frame-label">${f.occ?`P${f.pid}<br>pg${f.pg}`:'FREE'}</div>
+    </div>`).join('');
+}
+
+function renderTLB(){
+  const g=document.getElementById('tlb-display');if(!g)return;
+  g.innerHTML=pState.tlb.map((e,i)=>
+    `<div class="tlb-box ${e.v?'active':''}">
+      <div class="tlb-label">SLOT ${i}</div>
+      <strong>${e.v?`Page ${e.pg} → Frame ${e.fr}`:'empty'}</strong>
+    </div>`).join('');
+}
+
+function updatePStats(){
+  const s=pState.stats,total=Math.max(s.ta,1);
+  const hr=s.th/total,eat=(hr*10+(1-hr)*110).toFixed(1);
+  document.getElementById('ps-pf').textContent=s.pf;
+  document.getElementById('ps-th').textContent=s.th;
+  document.getElementById('ps-tm').textContent=s.tm;
+  document.getElementById('ps-ta').textContent=s.ta;
+  document.getElementById('ps-eat').textContent=eat;
+}
+
+function tlbLookup(pg){return pState.tlb.find(e=>e.v&&e.pg===pg)||null}
+function tlbInsert(pg,fr){const s=pState.tlbN;pState.tlb[s]={pg,fr,v:true};pState.tlbN=(s+1)%TS;}
+function findFree(){return pState.frames.findIndex(f=>!f.occ)}
+
+function doPage(){
+  const pid=+document.getElementById('p-pid').value||1;
+  const va=+document.getElementById('p-va').value;
+  if(va<0||va>=NP*PS){showResult('p-result','err','🚫',`Address ${va} is out of range! Max = ${NP*PS-1}`);return;}
+
+  const pg=Math.floor(va/PS),off=va%PS;
+  pState.stats.ta++;pState.clk++;
+
+  // Update translation visual
+  ['tv-va','tv-pn','tv-off'].forEach((id,i)=>{
+    const el=document.getElementById(id);el.textContent=[va,pg,off][i];
+    el.parentElement.className='tv-box active';
+  });
+
+  const te=tlbLookup(pg);
+  if(te){
+    pState.stats.th++;
+    const pa=te.fr*PS+off;
+    document.getElementById('tv-fn').textContent=te.fr;
+    document.getElementById('tv-fn').parentElement.className='tv-box active';
+    document.getElementById('tv-pa').textContent=pa;
+    document.getElementById('tv-pa').parentElement.className='tv-box result';
+    showResult('p-result','hit','⚡','TLB HIT! Found in TLB cache instantly. Frame '+te.fr+' → Physical Address = '+pa);
+    appendLog('p-log','hit',`⚡ TLB HIT | VA=${va} | Page ${pg} → Frame ${te.fr} | PA=${pa}`);
+    pState.pt[pg].ref=true;pState.pt[pg].lu=pState.clk;
+  } else {
+    pState.stats.tm++;
+    const pte=pState.pt[pg];
+    if(!pte.valid){
+      pState.stats.pf++;
+      let ff=findFree();
+      if(ff===-1){
+        // evict LRU
+        let minT=Infinity;pState.frames.forEach((f,i)=>{if(f.occ&&pState.pt[f.pg].lu<minT){minT=pState.pt[f.pg].lu;ff=i;}});
+        const old=pState.frames[ff].pg;
+        pState.pt[old].valid=false;pState.pt[old].fr=null;
+        pState.tlb.forEach(e=>{if(e.pg===old)e.v=false;});
+        appendLog('p-log','fault',`⚠️ Evicted page ${old} from frame ${ff} (LRU)`);
+      }
+      pState.frames[ff]={id:ff,occ:true,pid,pg};
+      pte.valid=true;pte.fr=ff;
+      const cells=document.getElementById('p-frames');
+      if(cells){
+        const boxes=cells.querySelectorAll('.frame-box');
+        if(boxes[ff]){boxes[ff].classList.add('just-in');setTimeout(()=>boxes[ff].classList.remove('just-in'),700);}
+      }
+      showResult('p-result','fault','🚨','PAGE FAULT! Page '+pg+' was not in RAM. Loaded into Frame '+ff+'. Physical Address = '+(ff*PS+off));
+      appendLog('p-log','fault',`🚨 PAGE FAULT | Page ${pg} → loaded into Frame ${ff} | PA=${ff*PS+off}`);
+    } else {
+      showResult('p-result','miss','📋','TLB MISS. Page '+pg+' found in Page Table → Frame '+pte.fr+'. Physical Address = '+(pte.fr*PS+off));
+      appendLog('p-log','miss',`📋 TLB MISS | Page ${pg} → Frame ${pte.fr} | PA=${pte.fr*PS+off}`);
+    }
+    pte.ref=true;pte.lu=pState.clk;pte.dirty=true;
+    tlbInsert(pg,pte.fr);
+    document.getElementById('tv-fn').textContent=pte.fr;
+    document.getElementById('tv-fn').parentElement.className='tv-box active';
+    document.getElementById('tv-pa').textContent=pte.fr*PS+off;
+    document.getElementById('tv-pa').parentElement.className='tv-box result';
+  }
+  updatePStats();renderPFrames();renderTLB();
+}
+
+function resetPaging(){
+  pState={frames:Array.from({length:NF},(_,i)=>({id:i,occ:false,pid:null,pg:null})),pt:Array.from({length:NP},(_,i)=>({pg:i,valid:false,fr:null,dirty:false,ref:false,lu:0})),tlb:Array.from({length:TS},()=>({pg:null,fr:null,v:false})),tlbN:0,clk:0,stats:{pf:0,th:0,tm:0,ta:0}};
+  document.getElementById('p-result').innerHTML='';
+  ['tv-va','tv-pn','tv-off','tv-fn','tv-pa'].forEach(id=>{const e=document.getElementById(id);e.textContent='?';e.parentElement.className='tv-box empty';});
+  updatePStats();renderPFrames();renderTLB();
+  appendLog('p-log','info','↺ Simulation reset.');
+}
+
+// ═══════════════════════════════════════════
+//  SEGMENTATION STATE
+// ═══════════════════════════════════════════
+let segs=Array.from({length:8},(_,i)=>({id:i,valid:false,pid:null,base:i*10000,limit:0}));
+
+function createSeg(){
+  const id=+document.getElementById('s-id').value;
+  const sz=+document.getElementById('s-size').value;
+  const pid=+document.getElementById('s-pid').value||1;
+  segs[id]={id,valid:true,pid,base:id*10000,limit:sz};
+  showResult('s-result','seg','✅',`Segment ${id} created — Base: ${id*10000}, Limit: ${sz} bytes, Process: P${pid}`);
+  appendLog('s-log','hit',`✅ Segment ${id} | PID=${pid} | base=${id*10000} | limit=${sz}B`);
+  renderSegBars();
+}
+
+function accessSeg(){
+  const id=+document.getElementById('sa-id').value;
+  const off=+document.getElementById('sa-off').value;
+  const seg=segs[id];
+  if(!seg.valid){
+    showResult('s-result','err','🚫',`Segment ${id} doesn't exist yet! Create it first.`);
+    appendLog('s-log','err',`❌ Segment ${id} is not created`);
+    return;
+  }
+  if(off>=seg.limit){
+    showResult('s-result','err','🚨',`SEGMENTATION FAULT! Offset ${off} ≥ Limit ${seg.limit}. Access DENIED! You went outside the segment.`);
+    appendLog('s-log','err',`🚨 SEGFAULT | seg=${id} offset=${off} >= limit=${seg.limit}`);
+  } else {
+    const pa=seg.base+off;
+    showResult('s-result','hit','✅',`Access OK! Seg ${id} + Offset ${off} → Physical Address = ${pa} (Base ${seg.base} + Offset ${off})`);
+    appendLog('s-log','hit',`✅ Access OK | seg=${id} off=${off} → PA=${pa}`);
+  }
+}
+
+function resetSeg(){
+  segs=Array.from({length:8},(_,i)=>({id:i,valid:false,pid:null,base:i*10000,limit:0}));
+  document.getElementById('s-result').innerHTML='';
+  document.getElementById('seg-bars').innerHTML='<div style="color:var(--gray);font-size:.9rem">Create some segments to see the memory map →</div>';
+  appendLog('s-log','info','↺ Reset.');
+}
+
+const SC=['#2563eb','#16a34a','#ea580c','#7c3aed','#dc2626','#0891b2','#d97706','#db2777'];
+function renderSegBars(){
+  const active=segs.filter(s=>s.valid);
+  if(!active.length)return;
+  const total=8*10000;
+  document.getElementById('seg-bars').innerHTML=active.map(s=>{
+    const pct=Math.max(1,(s.limit/total*100)).toFixed(1);
+    const left=(s.base/total*100).toFixed(1);
+    return`<div class="seg-bar-wrap">
+      <div class="seg-bar-label">
+        <span style="color:${SC[s.id]};font-weight:800">Segment ${s.id} — P${s.pid}</span>
+        <span style="color:var(--gray)">Base=${s.base} | Limit=${s.limit}B | End=${s.base+s.limit}</span>
+      </div>
+      <div class="seg-bar-track">
+        <div class="seg-bar-fill" style="margin-left:${left}%;width:${pct}%;background:${SC[s.id]}">${s.limit}B</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  VIRTUAL MEMORY STATE
+// ═══════════════════════════════════════════
+let vpt=Array.from({length:32},(_,i)=>({pg:i,valid:false,fr:null,ref:false}));
+let vframes=Array.from({length:NF},(_,i)=>({id:i,occ:false,pid:null,pg:null}));
+
+function renderVirtGrid(){
+  const g=document.getElementById('virt-grid');if(!g)return;
+  g.innerHTML=vpt.map(p=>{
+    let cls='empty',lbl=`pg${p.pg}`;
+    if(p.valid){cls='present';lbl=`pg${p.pg}<br>F${p.fr}`;}
+    else if(p.ref){cls='disk';lbl=`pg${p.pg}<br>💿`;}
+    return`<div class="vg-cell ${cls}" onclick="toggleVP(${p.pg})" title="Click to toggle page ${p.pg}">${lbl}</div>`;
+  }).join('');
+}
+
+function renderVFrames(){
+  const g=document.getElementById('v-frames');if(!g)return;
+  g.innerHTML=vframes.map(f=>`<div class="frame-box ${f.occ?'used':''}"><div class="frame-num">F${f.id}</div><div class="frame-label">${f.occ?`pg${f.pg}`:'FREE'}</div></div>`).join('');
+  const mem=vpt.filter(p=>p.valid).length,disk=vpt.filter(p=>!p.valid&&p.ref).length;
+  const e=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  e('vs-mem',mem);e('vs-disk',disk);e('vs-free',32-mem-disk);
+}
+
+function loadVPage(pg){
+  if(vpt[pg].valid){showResult('v-result','hit','ℹ️',`Page ${pg} is already in RAM (Frame ${vpt[pg].fr})`);return;}
+  const ff=vframes.findIndex(f=>!f.occ);
+  if(ff===-1){showResult('v-result','err','🚨','RAM is full! Evict a page first.');return;}
+  vframes[ff]={id:ff,occ:true,pid:1,pg};vpt[pg]={pg,valid:true,fr:ff,ref:true};
+  showResult('v-result','hit','✅',`Page ${pg} loaded from disk → Frame ${ff}. It's now in RAM!`);
+  appendLog('v-log','fault',`📂 Page ${pg} loaded from disk → Frame ${ff}`);
+  renderVirtGrid();renderVFrames();
+}
+
+function evictVPage(pg){
+  if(!vpt[pg].valid){showResult('v-result','miss','ℹ️',`Page ${pg} is already on disk.`);return;}
+  const fr=vpt[pg].fr;
+  vframes[fr]={id:fr,occ:false,pid:null,pg:null};
+  vpt[pg]={pg,valid:false,fr:null,ref:true};
+  showResult('v-result','fault','💿',`Page ${pg} evicted from Frame ${fr} → moved to disk. Frame ${fr} is now free.`);
+  appendLog('v-log','fault',`💿 Page ${pg} evicted from Frame ${fr} → disk`);
+  renderVirtGrid();renderVFrames();
+}
+
+function toggleVP(pg){vpt[pg].valid?evictVPage(pg):loadVPage(pg);}
+
+function resetVirt(){
+  vpt=Array.from({length:32},(_,i)=>({pg:i,valid:false,fr:null,ref:false}));
+  vframes=Array.from({length:NF},(_,i)=>({id:i,occ:false,pid:null,pg:null}));
+  document.getElementById('v-result').innerHTML='';
+  renderVirtGrid();renderVFrames();
+  appendLog('v-log','info','↺ Reset.');
+}
+
+// ═══════════════════════════════════════════
+//  PAGE REPLACEMENT
+// ═══════════════════════════════════════════
+function simFIFO(ref,nf){let f=[],q=[],fa=0,L=[];ref.forEach(pg=>{let h=f.includes(pg);if(!h){fa++;if(f.length>=nf){let v=q.shift();f.splice(f.indexOf(v),1);}f.push(pg);q.push(pg);}L.push({pg,frames:[...f],hit:h});});return{faults:fa,log:L};}
+function simLRU(ref,nf){let f=[],o=[],fa=0,L=[];ref.forEach(pg=>{let idx=f.indexOf(pg),h=idx!==-1;if(h){o.splice(o.indexOf(pg),1);o.push(pg);}else{fa++;if(f.length>=nf){let v=o.shift();f.splice(f.indexOf(v),1);}f.push(pg);o.push(pg);}L.push({pg,frames:[...f],hit:h});});return{faults:fa,log:L};}
+function simOpt(ref,nf){let f=[],fa=0,L=[];ref.forEach((pg,i)=>{let h=f.includes(pg);if(!h){fa++;if(f.length>=nf){let victim=f.reduce((b,c)=>{let ni=ref.slice(i+1).indexOf(c),bi=ref.slice(i+1).indexOf(b);return(ni===-1?Infinity:ni)>(bi===-1?Infinity:bi)?c:b;});f.splice(f.indexOf(victim),1);}f.push(pg);}L.push({pg,frames:[...f],hit:h});});return{faults:fa,log:L};}
+
+function runReplacement(){
+  const nf=+document.getElementById('r-frames').value||3;
+  const ref=document.getElementById('r-ref').value.split(/[,\s]+/).map(Number).filter(n=>!isNaN(n));
+  if(!ref.length){appendLog('r-log','err','Invalid reference string');return;}
+
+  // chips
+  document.getElementById('r-chips').innerHTML=ref.map((p,i)=>`<div class="ref-chip" id="rc-${i}">${p}</div>`).join('');
+
+  const fifo=simFIFO(ref,nf),lru=simLRU(ref,nf),opt=simOpt(ref,nf);
+
+  document.getElementById('r-compare').style.display='grid';
+  document.getElementById('rc-fifo').textContent=fifo.faults;
+  document.getElementById('rc-lru').textContent=lru.faults;
+  document.getElementById('rc-opt').textContent=opt.faults;
+
+  // Highlight best
+  const best=Math.min(fifo.faults,lru.faults,opt.faults);
+  if(fifo.faults===best)document.getElementById('rc-fifo').parentElement.style.background='#dbeafe';
+  if(lru.faults===best)document.getElementById('rc-lru').parentElement.style.background='#dcfce7';
+  if(opt.faults===best)document.getElementById('rc-opt').parentElement.style.background='#ede9fe';
+
+  // Build trace table for LRU
+  const chosen=lru;
+  let html=`<div style="font-size:.9rem;font-weight:800;color:var(--navy);margin-bottom:10px">Step-by-step trace (LRU algorithm, ${nf} frames):</div>`;
+  html+=`<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.82rem;width:100%">`;
+  html+=`<thead><tr style="background:#f0f6ff"><th style="padding:8px 12px;text-align:left;border:1px solid #e2e8f0">Step</th><th style="padding:8px 12px;border:1px solid #e2e8f0">Page</th>`;
+  for(let i=0;i<nf;i++)html+=`<th style="padding:8px 12px;border:1px solid #e2e8f0">Frame ${i}</th>`;
+  html+=`<th style="padding:8px 12px;border:1px solid #e2e8f0">Result</th></tr></thead><tbody>`;
+  chosen.log.forEach((step,i)=>{
+    const bg=step.hit?'#f0fdf4':'#fefce8';
+    html+=`<tr style="background:${bg}">`;
+    html+=`<td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:700">${i+1}</td>`;
+    html+=`<td style="padding:7px 12px;border:1px solid #e2e8f0;font-weight:800;color:var(--navy)">${step.pg}</td>`;
+    for(let j=0;j<nf;j++){
+      const v=step.frames[j]!==undefined?step.frames[j]:'—';
+      const highlight=!step.hit&&j===step.frames.length-1;
+      html+=`<td style="padding:7px 12px;border:1px solid #e2e8f0;${highlight?'font-weight:800;color:var(--blue)':''}">${v}</td>`;
+    }
+    html+=`<td style="padding:7px 12px;border:1px solid #e2e8f0"><span style="background:${step.hit?'#dcfce7':'#fef3c7'};color:${step.hit?'var(--green)':'#b45309'};padding:3px 10px;border-radius:12px;font-weight:800;font-size:.78rem">${step.hit?'✅ HIT':'❌ FAULT'}</span></td>`;
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('r-trace').innerHTML=html;
+
+  // Update chips
+  chosen.log.forEach((step,i)=>{
+    const chip=document.getElementById('rc-'+i);
+    if(chip)chip.className=`ref-chip ${step.hit?'hit':'fault'}`;
+  });
+
+  appendLog('r-log','info',`FIFO: ${fifo.faults} faults | LRU: ${lru.faults} faults | Optimal: ${opt.faults} faults`);
+}
+
+// ── Init ──
+renderPFrames();
+renderTLB();
+renderVirtGrid();
+renderVFrames();
+</script>
+</body>
+</html>
