@@ -30,7 +30,7 @@ gcc simulator.c -o simulator
 To satisfy your "at least 3 commits" requirement, follow these steps in your Git terminal or Git Desktop client:
 
 **Commit 1: Add the C Simulator**
-```bash
+``'`bash
 git init
 git add simulator.c
 git commit -m "Initial commit: Add core C-based memory simulator"
